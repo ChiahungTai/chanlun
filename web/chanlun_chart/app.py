@@ -26,6 +26,7 @@ if __name__ == "__main__":
     try:
         app = create_app()
         http_server = WSGIServer(('0.0.0.0', 9900), app)
+
         webbrowser.open('http://127.0.0.1:9900')
         http_server.serve_forever()
 

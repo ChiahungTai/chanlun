@@ -81,13 +81,14 @@ class BackTestKlines(MarketDatas):
             frequency = [self.frequencys[-1]]
         if isinstance(frequency, str):
             frequency = [frequency]
-        for f in frequency:
+        for _f in frequency:
             klines = self.ex.klines(
-                base_code, f,
+                base_code, _f,
                 start_date=fun.datetime_to_str(self.start_date), end_date=fun.datetime_to_str(self.end_date),
                 args={'limit': None}
             )
-            self.loop_datetime_list[f] = list(klines['date'].to_list())
+            self.loop_datetime_list[_f] = list(klines['date'].to_list())
+            self.loop_datetime_list[_f].sort()
 
         self.bar = tqdm(total=len(list(self.loop_datetime_list.values())[-1]))
 
@@ -108,8 +109,8 @@ class BackTestKlines(MarketDatas):
             self.clear_all_cache()
             return False
         self.now_date = self.loop_datetime_list[frequency].pop(0)
-        for f, loop_dt_list in self.loop_datetime_list.items():
-            self.loop_datetime_list[f] = [d for d in loop_dt_list if d >= self.now_date]
+        # for _f, loop_dt_list in self.loop_datetime_list.items():
+        #     self.loop_datetime_list[_f] = [d for d in loop_dt_list if d >= self.now_date]
         # 清除之前的 cl_datas 、klines 缓存，重新计算
         self.cache_cl_datas = {}
         self.cache_klines = {}
@@ -178,6 +179,11 @@ class BackTestKlines(MarketDatas):
             # 回测单次循环周期内，计算过后进行缓存，避免多次计算
             self.cache_cl_datas[key] = self.cl_datas[key]
 
+            if self.cl_datas[key].get_src_klines()[-1].date != klines.iloc[-1]['date']:
+                raise RuntimeError(
+                    f'{code} 计算缠论数据异常，缠论数据最后时间与给定的K线最后时间不一致 【缠论:{self.cl_datas[key].get_src_klines()[-1].date}】 Kline: {klines.iloc[-1]["date"]}'
+                )
+
             return self.cache_cl_datas[key]
         finally:
             self._use_times['get_cl_data'] += time.time() - _time
@@ -191,32 +197,47 @@ class BackTestKlines(MarketDatas):
         klines = {}
         if self.load_data_to_cache:
             # 使用缓存
-            for f in self.frequencys:
-                key = '%s-%s' % (code, f)
+            for _f in self.frequencys:
+                key = '%s-%s' % (code, _f)
                 if key not in self.all_klines.keys():
                     # 从数据库获取日期区间的所有行情
                     self.all_klines[key] = self.ex.klines(
-                        code, f,
-                        start_date=self._cal_start_date_by_frequency(self.start_date, f),
+                        code, _f,
+                        start_date=self._cal_start_date_by_frequency(self.start_date, _f),
                         end_date=fun.datetime_to_str(self.end_date),
                         args={'limit': None}
                     )
+                    self.all_klines[key].sort_values('date', inplace=True)  # 按照日期重新进行排序，避免原始数据乱序导致出错
 
-            for f in self.frequencys:
-                key = '%s-%s' % (code, f)
-                if self.market in ['currency', 'futures']:
+            for _f in self.frequencys:
+                key = '%s-%s' % (code, _f)
+                if self.market in ['currency', 'futures', 'us']:  # 后对其的，不能包含当前日期
                     kline = self.all_klines[key][self.all_klines[key]['date'] < self.now_date][-self.load_kline_nums::]
                 else:
                     kline = self.all_klines[key][self.all_klines[key]['date'] <= self.now_date][-self.load_kline_nums::]
-                klines[f] = kline
+                klines[_f] = kline
         else:
             # 使用数据库按需查询
-            for f in self.frequencys:
-                klines[f] = self.ex.klines(code, f, end_date=fun.datetime_to_str(self.now_date), args={'limit': 10000})
+            for _f in self.frequencys:
+                klines[_f] = self.ex.klines(
+                    code, _f, end_date=fun.datetime_to_str(self.now_date), args={'limit': 10000}
+                )
+                klines[_f].sort_values('date', inplace=True)
+
         self._use_times['klines'] += time.time() - _time
 
         # 转换周期k线，去除未来数据
         klines = self.convert_klines(klines)
+
+        # 判断所有周期的收盘价是否一致，如果不一致说明不同周期的数据不一致
+        close_price = None
+        for _f, _ks in klines.items():
+            if len(_ks) > 0:
+                if close_price is None:
+                    close_price = _ks.iloc[-1]['close']
+                if close_price != _ks.iloc[-1]['close']:
+                    raise RuntimeError(f'{code} 获取K线异常，{_f} 周期的收盘价与其他周期数据不同')
+
         # 将结果保存到 缓存中，避免重复读取
         self.cache_klines[code] = klines
         return klines[frequency]
@@ -226,15 +247,6 @@ class BackTestKlines(MarketDatas):
         转换 kline，去除未来的 kline数据
         :return:
         """
-        # 合成周期对应的低级别k线数量（也要兼顾不同市场的时间周期）
-        # frequency_num_maps = {
-        #     'd': {'4h': 7, '60m': 25, '30m': 50, '15m': 100, '5m': 300},
-        #     '4h': {'60m': 5, '30m': 10, '15m': 20, '5m': 60, '1m': 300},
-        #     '60m': {'30m': 3, '15m': 6, '5m': 20, '1m': 70},
-        #     '30m': {'15m': 3, '5m': 10, '1m': 35},
-        #     '15m': {'5m': 5, '1m': 20},
-        #     '5m': {'1m': 10},
-        # }
         _time = time.time()
         for i in range(len(self.frequencys), 1, -1):
             min_f = self.frequencys[i - 1]
@@ -243,14 +255,13 @@ class BackTestKlines(MarketDatas):
                 continue
             new_kline = self.ex.convert_kline_frequency(klines[min_f][-120::], max_f)
             if len(klines[max_f]) > 0 and len(new_kline) > 0:
+                # 先删除下大周期的最后一行数据，用合并后的数据代替
+                klines[max_f] = klines[max_f].drop(klines[max_f].index[-1])
+
                 klines[max_f] = pd.concat(
                     [klines[max_f], new_kline], ignore_index=True
                 ).drop_duplicates(subset=['date'], keep='last')
-                # 删除大周期中，日期大于最小周期的未来数据
-                if self.market in ['currency', 'futures']:
-                    klines[max_f] = klines[max_f].drop(
-                        klines[max_f][klines[max_f]['date'] > klines[min_f].iloc[-1]['date']].index
-                    )
+
         self._use_times['convert_klines'] += time.time() - _time
         return klines
 

@@ -1,9 +1,11 @@
 import contextlib
+import datetime
+from typing import List, Dict
+
+import pandas as pd
 import pymysql
 import pytz
 from dbutils.pooled_db import PooledDB
-import pandas as pd
-from typing import List, Dict
 
 from chanlun import config
 from chanlun.exchange.exchange import Exchange, convert_futures_kline_frequency, \
@@ -233,6 +235,7 @@ class ExchangeDB(Exchange):
         kline_pd = kline_pd.iloc[::-1]
         kline_pd['code'] = code
         kline_pd['date'] = pd.to_datetime(kline_pd['date']).dt.tz_localize(self.tz)  # .map(lambda d: d.to_pydatetime())
+        kline_pd['date'] = kline_pd['date'].apply(self.__convert_date)
         kline_pd['open'] = kline_pd['open'].astype('float')
         kline_pd['close'] = kline_pd['close'].astype('float')
         kline_pd['high'] = kline_pd['high'].astype('float')
@@ -243,6 +246,26 @@ class ExchangeDB(Exchange):
         kline_pd = kline_pd.reset_index(drop=True)
 
         return kline_pd
+
+    def __convert_date(self, dt: datetime.datetime):
+        """
+        统一各个市场的时间格式
+        TODO 需要根据自己数据源的数据格式进行调整
+        TODO 将日及以上周期（大多数这类的时间都是 0点0分），修改为交易日结束或开始时间（根据日期是前对其还是后对其来决定是开盘时间还是收盘时间）
+        """
+        if self.market == 'a':
+            if dt.hour == 0 and dt.minute == 0:
+                return dt.replace(hour=15, minute=0)
+        if self.market == 'hk':
+            if dt.hour == 0 and dt.minute == 0:
+                return dt.replace(hour=16, minute=0)
+        if self.market == 'futures':
+            if dt.hour == 0 and dt.minute == 0:
+                return dt.replace(hour=9, minute=0)
+        if self.market == 'us':
+            if dt.hour == 0 and dt.minute == 0:
+                return dt.replace(hour=9, minute=30)
+        return dt
 
     def convert_kline_frequency(self, klines: pd.DataFrame, to_f: str) -> pd.DataFrame:
         """
@@ -296,9 +319,9 @@ class ExchangeDB(Exchange):
 
 
 if __name__ == '__main__':
-    ex = ExchangeDB('us')
+    ex = ExchangeDB('a')
     # ticks = ex.ticks(['SHSE.000001'])
     # print(ticks)
 
-    klines = ex.klines('AAPL', '60m')
-    print(klines.tail())
+    klines = ex.klines('SZSE.000333', 'd')
+    print(klines.tail(20))

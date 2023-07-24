@@ -437,10 +437,6 @@ def convert_us_kline_frequency(klines: pd.DataFrame, to_f: str) -> pd.DataFrame:
     period_klines.reset_index(inplace=True)
     period_klines.drop('date_index', axis=1, inplace=True)
 
-    if to_f in ['d', 'w', 'm']:
-        # 将时间调整成 00:00:00
-        period_klines['date'] = period_klines['date'].map(lambda dt: dt.replace(hour=0, minute=0, second=0))
-
     return period_klines[['code', 'date', 'open', 'close', 'high', 'low', 'volume']]
 
 
@@ -468,10 +464,6 @@ def convert_us_tdx_kline_frequency(klines: pd.DataFrame, to_f: str) -> pd.DataFr
     period_klines.dropna(inplace=True)
     period_klines.reset_index(inplace=True)
     period_klines.drop('date_index', axis=1, inplace=True)
-
-    if to_f in ['d', 'w', 'm']:
-        # 将时间调整成 00:00:00
-        period_klines['date'] = period_klines['date'].map(lambda dt: dt.replace(hour=0, minute=0, second=0))
 
     period_klines['date'] = period_klines['date'].apply(lambda dt: dt.astimezone(pytz.timezone('US/Eastern')))
 
