@@ -179,7 +179,7 @@ class BackTestKlines(MarketDatas):
             # 回测单次循环周期内，计算过后进行缓存，避免多次计算
             self.cache_cl_datas[key] = self.cl_datas[key]
 
-            if self.cl_datas[key].get_src_klines()[-1].date != klines.iloc[-1]['date']:
+            if len(klines) > 0 and self.cl_datas[key].get_src_klines()[-1].date != klines.iloc[-1]['date']:
                 raise RuntimeError(
                     f'{code} 计算缠论数据异常，缠论数据最后时间与给定的K线最后时间不一致 【缠论:{self.cl_datas[key].get_src_klines()[-1].date}】 Kline: {klines.iloc[-1]["date"]}'
                 )
@@ -261,6 +261,13 @@ class BackTestKlines(MarketDatas):
                 klines[max_f] = pd.concat(
                     [klines[max_f], new_kline], ignore_index=True
                 ).drop_duplicates(subset=['date'], keep='last')
+
+        # 检测在数据列中，是否有大于最后一个时间的行
+        for _f, _k_pd in klines.items():
+            if len(_k_pd) > 0:
+                _last_dt = _k_pd.iloc[-1]['date']
+                if len(_k_pd[_k_pd['date'] > _last_dt]) > 0:
+                    raise Exception(f'K线数据异常，有大于最后时间的数据存在 {_last_dt}')
 
         self._use_times['convert_klines'] += time.time() - _time
         return klines

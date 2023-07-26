@@ -1,7 +1,7 @@
 from abc import ABC
 
-import talib
 import MyTT
+import talib
 
 from chanlun.cl_interface import *
 from chanlun.cl_utils import cal_zs_macd_infos
@@ -610,8 +610,8 @@ class Strategy(ABC):
             'qiang_ding_fx': 0, 'qiang_di_fx': 0,
             'up_bi_bc': 0, 'up_xd_bc': 0, 'up_pz_bc': 0, 'up_qs_bc': 0,
             'down_bi_bc': 0, 'down_xd_bc': 0, 'down_pz_bc': 0, 'down_qs_bc': 0,
-            '1buy': 0, '2buy': 0, '3buy': 0, 'l3buy': 0,
-            '1sell': 0, '2sell': 0, '3sell': 0, 'l3sell': 0
+            '1buy': 0, '2buy': 0, 'l2buy': 0, '3buy': 0, 'l3buy': 0,
+            '1sell': 0, '2sell': 0, 'l2sell': 0, '3sell': 0, 'l3sell': 0
         }
         for bi in low_data.get_bis()[::-1]:
             if bi.end.k.date < start_datetime:

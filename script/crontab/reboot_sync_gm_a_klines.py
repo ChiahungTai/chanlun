@@ -1,13 +1,14 @@
 #:  -*- coding: utf-8 -*-
 import datetime
-
-from chanlun.exchange.exchange_db import ExchangeDB
-from tqdm.auto import tqdm
-import traceback
 import time
+import traceback
+
 import pandas as pd
 from gm.api import *
+from tqdm.auto import tqdm
+
 from chanlun import config
+from chanlun.exchange.exchange_db import ExchangeDB
 
 """
 同步股票数据到数据库中
@@ -425,7 +426,8 @@ for code in tqdm(run_codes):
                 if last_dt is None:
                     last_dt = dt['start']
                 klines = history(
-                    code, fre_maps[f], start_time=last_dt, end_time=now_datetime, adjust=ADJUST_POST, df=True
+                    code, fre_maps[f], start_time=last_dt, end_time=now_datetime, adjust=ADJUST_POST, df=True,
+                    fill_missing='Last'
                 )
                 klines.loc[:, 'code'] = klines['symbol']
                 klines.loc[:, 'date'] = pd.to_datetime(klines['eob'])

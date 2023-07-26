@@ -197,6 +197,15 @@ class ExchangeDB(Exchange):
         db.commit()
         return
 
+    @staticmethod
+    def execute_sql(sql: str):
+        global g_pool_db
+        db = g_pool_db.connection()
+        cursor = db.cursor()
+        cursor.execute(sql)
+        db.commit()
+        return
+
     def klines(self, code: str, frequency: str,
                start_date: str = None, end_date: str = None,
                args=None) -> [pd.DataFrame, None]:
