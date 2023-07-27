@@ -52,20 +52,32 @@ class MultiLevelAnalyse:
         start_date = up_line.start.get_start_src_k().date
         end_date = up_line.end.get_end_src_k().date
 
-        low_lines: List[LINE] = []
         find_lines = self.low_cd.get_bis() if query_line_type == 'bi' else self.low_cd.get_xds()
-        for _line in find_lines:
-            if _line.end.k.date < start_date:
-                continue
-            if end_date is not None and _line.start.k.date > end_date:
-                break
-            if len(low_lines) == 0 and _line.type != up_line.type:
-                continue
-            low_lines.append(_line)
-        if len(low_lines) > 0 and low_lines[-1].type != up_line.type:
-            del (low_lines[-1])
+        low_lines: List[LINE] = [
+            _l for _l in find_lines
+            if _l.start.k.date >= start_date and _l.end.k.date <= end_date
+        ]
+        try:
+            # 向上的线段，找起点最低，终点最高的
+            # 向下的线段，找起点最高，终点最低的
+            if up_line.type == 'up':
+                low_up_lines = [_l for _l in low_lines if _l.type == 'up']
+                low_up_lines = sorted(low_up_lines, key=lambda _l: _l.low)
+                start_l_index = low_up_lines[0].index
+                low_up_lines = sorted(low_up_lines, key=lambda _l: _l.high)
+                end_l_index = low_up_lines[-1].index
+            else:
+                low_down_lines = [_l for _l in low_lines if _l.type == 'down']
+                low_down_lines = sorted(low_down_lines, key=lambda _l: _l.high)
+                start_l_index = low_down_lines[-1].index
+                low_down_lines = sorted(low_down_lines, key=lambda _l: _l.low)
+                end_l_index = low_down_lines[0].index
 
-        return low_lines
+            low_lines = [_l for _l in low_lines if start_l_index <= _l.index <= end_l_index]
+
+            return low_lines
+        except Exception:
+            return []
 
     def _query_low_zss(self, low_lines: List[LINE], zs_type='bi'):
         """
@@ -373,7 +385,5 @@ class LinesFormAnalyse:
         zs_type_maps = {'up': '上涨中枢', 'down': '下跌中枢', 'zd': '震荡中枢'}
         zss_str = '-'.join([zs_type_maps[_zs.zs_type] for _zs in qs_zs_infos])
         bwlqs.zss_str = zss_str
-
-
 
         return bwlqs

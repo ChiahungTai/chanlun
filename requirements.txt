@@ -4,6 +4,7 @@ requests
 redis
 prettytable
 pymysql
+chardet
 
 pyecharts==2.0.1
 django==3.2.12

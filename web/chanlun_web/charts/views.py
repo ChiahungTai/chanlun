@@ -2,7 +2,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
 from django.shortcuts import render, redirect
 
-from chanlun import zixuan
+from chanlun import zixuan, config
 from chanlun.cl_utils import *
 from chanlun.exchange import get_exchange, Market
 from . import tasks

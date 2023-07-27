@@ -4,9 +4,9 @@
 import os
 import sys
 import telnetlib
-import redis
+
 import pymysql
-from pyarmor.pyarmor import main as call_pyarmor
+import redis
 
 
 def check_env():
