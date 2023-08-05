@@ -337,6 +337,26 @@ class ZS:
             mmds += _l.line_mmds(zs_type)
         return mmds
 
+    def zs_up_bcs(self, zs_type='|'):
+        """
+        获取中枢内，向上线段的背驰列表
+        """
+        bcs = []
+        for _l in self.lines:
+            if _l.type == 'up':
+                bcs += _l.line_bcs(zs_type)
+        return bcs
+
+    def zs_down_bcs(self, zs_type='|'):
+        """
+        获取中枢内，向上线段的背驰列表
+        """
+        bcs = []
+        for _l in self.lines:
+            if _l.type == 'down':
+                bcs += _l.line_bcs(zs_type)
+        return bcs
+
     def __str__(self):
         return f'index: {self.index} zs_type: {self.zs_type} level: {self.level} FX: ({self.start.k.date}-{self.end.k.date}) type: {self.type} zg: {self.zg} zd: {self.zd} gg: {self.gg} dd: {self.dd} done: {self.done} real: {self.real} '
 

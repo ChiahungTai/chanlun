@@ -1036,10 +1036,11 @@
 
             render_zixuan_opts();
             change_chart_ticker(market, code);
+
+            interval_update_rates = setInterval(stocks_update_rate, 60000);
         }
 
         init_web();
-        interval_update_rates = setInterval(stocks_update_rate, 60000);
     });
 </script>
 

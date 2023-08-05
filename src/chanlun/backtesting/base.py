@@ -430,11 +430,14 @@ class Strategy(ABC):
         """
         if bi.is_done() is False:
             return False
-        last_k = cd.get_klines()[-1]
-        if bi.type == 'up' and last_k.c < last_k.o and last_k.c < bi.end.klines[-1].l:
-            return True
-        elif bi.type == 'down' and last_k.c > last_k.o and last_k.c > bi.end.klines[-1].h:
-            return True
+        next_ks = cd.get_klines()[bi.end.klines[-1].k_index + 1:]
+        if len(next_ks) == 0:
+            return False
+        for _nk in next_ks:
+            if bi.type == 'up' and _nk.c < _nk.o and _nk.c < bi.end.klines[-1].l:
+                return True
+            elif bi.type == 'down' and _nk.c > _nk.o and _nk.c > bi.end.klines[-1].h:
+                return True
 
         return False
 

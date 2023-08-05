@@ -646,8 +646,8 @@ def cl_data_to_tv_chart(cd: ICL, config: dict, to_frequency: str = None):
         'zsd': cd.get_zsds(),
     }
     line_type_map = {'bi': '笔', 'xd': '段', 'zsd': '走', 'qsd': '趋'}
-    bc_type_map = {'bi': '笔背驰', 'xd': '线段背驰', 'zsd': '走势段背驰', 'qsd': '趋势段背驰', 'pz': '盘整背驰',
-                   'qs': '趋势背驰'}
+    bc_type_map = {'bi': 'BI', 'xd': 'XD', 'zsd': 'ZSD', 'qsd': 'QSD', 'pz': 'PZ',
+                   'qs': 'QS'}
     mmd_type_map = {
         '1buy': '1B', '2buy': '2B', 'l2buy': 'L2B', '3buy': '3B', 'l3buy': 'L3B',
         '1sell': '1S', '2sell': '2S', 'l2sell': 'L2S', '3sell': '3S', 'l3sell': 'L3S'
@@ -658,54 +658,44 @@ def cl_data_to_tv_chart(cd: ICL, config: dict, to_frequency: str = None):
             if len(bcs) != 0 and l.end.k.date not in bc_infos.keys():
                 bc_infos[l.end.k.date] = {
                     'price': l.end.val,
-                    'bc_types': [],
-                    'bc_texts': []
+                    'bc_infos': {_type: [] for _type in line_type_map.keys()}
                 }
             if config[f'chart_show_{line_type}_bc'] == '1':
                 for bc in bcs:
-                    bc_text = f"{line_type_map[line_type]} {bc_type_map[bc]}"
-                    if bc_text not in bc_infos[l.end.k.date]['bc_texts']:
-                        bc_infos[l.end.k.date]['bc_types'].append(bc)
-                        bc_infos[l.end.k.date]['bc_texts'].append(bc_text)
+                    bc_infos[l.end.k.date]['bc_infos'][line_type].append(bc_type_map[bc])
 
             mmds = l.line_mmds('|')
             if len(mmds) != 0 and l.end.k.date not in mmd_infos.keys():
                 mmd_infos[l.end.k.date] = {
                     'price': l.end.val,
-                    'mmd_types': [],
-                    'mmd_texts': []
+                    'mmd_infos': {_type: [] for _type in line_type_map.keys()}
                 }
             if config[f'chart_show_{line_type}_mmd'] == '1':
                 for mmd in mmds:
-                    mmd_text = f"{line_type_map[line_type]} {mmd_type_map[mmd]}"
-                    if mmd_text not in mmd_infos[l.end.k.date]['mmd_texts']:
-                        mmd_infos[l.end.k.date]['mmd_types'].append(f'{line_type}_{mmd}')
-                        mmd_infos[l.end.k.date]['mmd_texts'].append(mmd_text)
+                    mmd_infos[l.end.k.date]['mmd_infos'][line_type].append(mmd_type_map[mmd])
 
-    # bc_marks = {
-    #     'id': [], 'time': [], 'color': [], 'text': [], 'label': [], 'labelFontColor': [], 'minSize': []
-    # }
     bc_chart_data = []
     for dt, bc in bc_infos.items():
-        if len(bc['bc_texts']) > 0:
+        bc_text = '/'.join([
+            f"{line_type_map[_type]}:{','.join(list(set(_bcs)))}" for _type, _bcs in bc['bc_infos'].items()
+            if len(_bcs) > 0
+        ])
+        if len(bc_text) > 0:
             bc_chart_data.append({
                 'points': {'time': fun.datetime_to_int(dt), 'price': bc['price']},
-                'text': ('/'.join(bc['bc_texts'])).strip('/')
+                'text': bc_text
             })
-        # bc_marks['id'].append(len(bc_marks['id']))
-        # bc_marks['time'].append(fun.datetime_to_int(dt))
-        # bc_marks['color'].append('red')
-        # bc_marks['text'].append(('/'.join(bc['bc_texts'])).strip('/'))
-        # bc_marks['label'].append(bc['price'])
-        # bc_marks['labelFontColor'].append('blue')
-        # bc_marks['minSize'].append(10)
 
     mmd_chart_data = []
     for dt, mmd in mmd_infos.items():
-        if len(mmd['mmd_texts']) > 0:
+        mmd_text = '/'.join([
+            f"{line_type_map[_type]}:{','.join(list(set(_mmds)))}" for _type, _mmds in mmd['mmd_infos'].items()
+            if len(_mmds) > 0
+        ])
+        if len(mmd_text) > 0:
             mmd_chart_data.append({
                 'points': {'time': fun.datetime_to_int(dt), 'price': mmd['price']},
-                'text': ('/'.join(mmd['mmd_texts'])).strip('/')
+                'text': mmd_text
             })
 
     return {
@@ -812,4 +802,4 @@ if __name__ == '__main__':
     cd = web_batch_get_cl_datas(market, code, {'d': klines}, cl_config)[0]
 
     tv_cd = cl_data_to_tv_chart(cd, cl_config)
-    print(tv_cd['t'][-1])
+    print(tv_cd)

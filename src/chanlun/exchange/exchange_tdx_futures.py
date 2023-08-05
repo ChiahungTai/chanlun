@@ -285,6 +285,6 @@ if __name__ == '__main__':
 
     # print(ex.to_tdx_code('QS.ZN2306'))
     #
-    klines = ex.klines('QS.RB2310', 'd')
+    klines = ex.klines('QS.RB2310', '1m')
     print(len(klines))
-    print(klines.tail(20))
+    print(klines.tail(60))

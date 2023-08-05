@@ -169,10 +169,10 @@ def convert_stock_kline_frequency(klines: pd.DataFrame, to_f: str) -> pd.DataFra
         period_klines.reset_index(inplace=True)
         period_klines.drop('date_index', axis=1, inplace=True)
         # 后对其的，最后一个k线的时间不是未来的结束时间，需要特殊处理一下
-        # 周期是 d、w、m，只保留年月日
-        # if to_f in ['d', 'w', 'm']:
-        #     period_klines['date'] = period_klines['date'].map(lambda d: datetime_to_str(d, '%Y-%m-%d'))
-        #     period_klines['date'] = pd.to_datetime(period_klines['date']).dt.tz_localize(__tz)
+        # 周期是 d、w、m，将时间设置为 15点收盘时间
+        if to_f in ['d', 'w', 'm']:
+            period_klines['date'] = period_klines['date'].map(lambda d: d.replace(hour=15, minute=0))
+
         if to_f in ['5m', '10m', '15m', '30m']:
             def lts_time(d: datetime.datetime):
                 dt_int = datetime_to_int(d)

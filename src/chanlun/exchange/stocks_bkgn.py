@@ -1,15 +1,13 @@
-import os
 import json
-import time
+import os
 import random
-
-import akshare as ak
-from tqdm.auto import tqdm
+import time
 from typing import Tuple
 
+import akshare as ak
 from pytdx.hq import TdxHq_API
 from pytdx.params import TDXParams
-from pytdx.util import best_ip
+from tqdm.auto import tqdm
 
 """
 股票板块概念
@@ -20,6 +18,8 @@ class StocksBKGN(object):
 
     def __init__(self):
         self.file_name = os.path.split(os.path.realpath(__file__))[0] + '/stocks_bkgn.json'
+
+        self.cache_file_bk = None
 
     def reload_ths_bkgn(self):
         """
@@ -192,9 +192,11 @@ class StocksBKGN(object):
         return True
 
     def __file_bkgns(self) -> Tuple[dict, dict]:
-        with open(self.file_name, 'r', encoding='utf-8') as fp:
-            bkgns = json.load(fp)
-        return bkgns['hy'], bkgns['gn']
+        if self.cache_file_bk is None:
+            with open(self.file_name, 'r', encoding='utf-8') as fp:
+                bkgns = json.load(fp)
+            self.cache_file_bk = bkgns
+        return self.cache_file_bk['hy'], self.cache_file_bk['gn']
 
     def get_code_bkgn(self, code: str):
         """

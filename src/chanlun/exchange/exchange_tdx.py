@@ -481,7 +481,7 @@ if __name__ == '__main__':
     # xdxr = ex.xdxr(0, '000014')
     # print(xdxr)
 
-    klines = ex.klines('SZ.000802', 'd')
+    klines = ex.klines('SH.600085', 'w')
     print(klines.tail())
     # 207735
     #
