@@ -328,7 +328,7 @@ class ZS:
             return 0
         return (zgzd / (self.gg - self.dd)) * 100
 
-    def zs_mmds(self, zs_type='|'):
+    def zs_mmds(self, zs_type='|') -> List[str]:
         """
         获取中枢内线的所有买点列表
         """
@@ -337,7 +337,7 @@ class ZS:
             mmds += _l.line_mmds(zs_type)
         return mmds
 
-    def zs_up_bcs(self, zs_type='|'):
+    def zs_up_bcs(self, zs_type='|') -> List[str]:
         """
         获取中枢内，向上线段的背驰列表
         """
@@ -347,7 +347,7 @@ class ZS:
                 bcs += _l.line_bcs(zs_type)
         return bcs
 
-    def zs_down_bcs(self, zs_type='|'):
+    def zs_down_bcs(self, zs_type='|') -> List[str]:
         """
         获取中枢内，向上线段的背驰列表
         """

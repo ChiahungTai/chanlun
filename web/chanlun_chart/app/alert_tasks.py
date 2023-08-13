@@ -40,8 +40,8 @@ class AlertTasks(object):
     def alert_run(self, alert_id):
         alert_config = self.alert_get(alert_id)
         ex = get_exchange(Market(alert_config['market']))
-        # if ex.now_trading() is False:
-        #     return True
+        if ex.now_trading() is False:
+            return True
 
         zx = ZiXuan(alert_config['market'])
         # 获取自选股票

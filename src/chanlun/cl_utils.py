@@ -723,11 +723,14 @@ def bi_td(bi: BI, cd: ICL):
     """
     if bi.is_done() is False:
         return False
-    last_k = cd.get_klines()[-1]
-    if bi.type == 'up' and last_k.c < last_k.o and last_k.c < bi.end.klines[-1].l:
-        return True
-    elif bi.type == 'down' and last_k.c > last_k.o and last_k.c > bi.end.klines[-1].h:
-        return True
+    next_ks = cd.get_klines()[bi.end.klines[-1].k_index + 1:]
+    if len(next_ks) == 0:
+        return False
+    for _nk in next_ks:
+        if bi.type == 'up' and _nk.c < _nk.o and _nk.c < bi.end.klines[-1].l:
+            return True
+        elif bi.type == 'down' and _nk.c > _nk.o and _nk.c > bi.end.klines[-1].h:
+            return True
 
     return False
 
@@ -779,15 +782,53 @@ def bi_qk_num(cd: ICL, bi: BI) -> Tuple[int, int]:
     """
     up_qk_num = 0
     down_qk_num = 0
-    klines = cd.get_klines()[bi.start.k.k_index:bi.end.k.k_index + 1]
-    for i in range(1, len(klines)):
-        pre_k = klines[i - 1]
-        now_k = klines[i]
+    _ks = cd.get_src_klines()[bi.start.k.k_index:bi.end.k.k_index + 1]
+    for i in range(1, len(_ks)):
+        pre_k = _ks[i - 1]
+        now_k = _ks[i]
         if now_k.l > pre_k.h:
             up_qk_num += 1
         elif now_k.h < pre_k.l:
             down_qk_num += 1
     return up_qk_num, down_qk_num
+
+
+def klines_to_heikin_ashi_klines(ks: pd.DataFrame) -> pd.DataFrame:
+    """
+    将缠论数据的普通K线，转换成平均K线数据，返回格式 pd.DataFrame
+    """
+    cd_klines = [{
+        'code': _k['code'], 'date': _k['date'], 'high': _k['high'],
+        'open': _k['open'], 'low': _k['low'], 'close': _k['close'], 'volume': _k['volume']
+    } for _, _k in ks.iterrows()]
+
+    mean_klines: list = []
+    for i in range(len(cd_klines)):
+        if i == 0:
+            mean_klines.append(cd_klines[i])
+            continue
+        mk = mean_klines[i - 1]
+        nk = cd_klines[i]
+        # 开盘价 =（前一根烛台的开盘价+ 前一根烛台的收盘价）/2
+        # 收盘价 =（当前烛台的开盘价 + 最高价 + 最低价 + 收盘价）/4
+        # 最大值（或最高价）= 当前周期的最高价、当前周期的平均 K 线图开盘价或收盘价中的最大值。
+        # 最小值（或最低价）= 当前周期的最低价、当前周期的平均 K 线图开盘价或收盘价中的最小值
+        _open = (mk['open'] + mk['close']) / 2
+        _close = (nk['open'] + nk['high'] + nk['low'] + nk['close']) / 4
+        _high = max(nk['high'], _open, _close)
+        _low = min(nk['low'], _open, _close)
+        _volume = nk['volume']
+        mean_klines.append({
+            'code': nk['code'],
+            'date': nk['date'],
+            'high': _high,
+            'open': _open,
+            'low': _low,
+            'close': _close,
+            'volume': _volume
+        })
+
+    return pd.DataFrame(mean_klines)
 
 
 if __name__ == '__main__':
@@ -801,5 +842,8 @@ if __name__ == '__main__':
 
     cd = web_batch_get_cl_datas(market, code, {'d': klines}, cl_config)[0]
 
-    tv_cd = cl_data_to_tv_chart(cd, cl_config)
-    print(tv_cd)
+    # tv_cd = cl_data_to_tv_chart(cd, cl_config)
+    # print(tv_cd)
+
+    m_klines = klines_to_heikin_ashi_klines(klines)
+    print(m_klines.tail())

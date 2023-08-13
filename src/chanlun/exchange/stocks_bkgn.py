@@ -242,7 +242,7 @@ if __name__ == '__main__':
     """
     bkgn = StocksBKGN()
     # 重新更新并保存行业与板块信息
-    bkgn.reload_ths_bkgn()
+    # bkgn.reload_ths_bkgn()
 
     # 获取代码的板块概念信息
     code_bkgn = bkgn.get_code_bkgn('301080')

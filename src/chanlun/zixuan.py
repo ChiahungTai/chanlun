@@ -1,7 +1,8 @@
+from typing import List, Dict
+
 from chanlun import config
 from chanlun import rd
 from chanlun.exchange import get_exchange, Market
-from typing import List, Dict
 
 
 class ZiXuan(object):
@@ -43,7 +44,7 @@ class ZiXuan(object):
             return []
         return rd.zx_query(self.market_type, zx_group)
 
-    def add_stock(self, zx_group, code, name, location='top'):
+    def add_stock(self, zx_group, code, name, location='top', color=''):
         """
         添加自选
         """
@@ -60,7 +61,10 @@ class ZiXuan(object):
         # 先删除原来的，如果有的话
         self.del_stock(zx_group, code)
         stocks = self.zx_stocks(zx_group)
-        stocks.insert(0 if location == 'top' else -1, {'code': code, 'name': name})
+        if location == 'top':
+            stocks.insert(0, {'code': code, 'name': name, 'color': color})
+        else:
+            stocks.append({'code': code, 'name': name, 'color': color})
         rd.zx_save(self.market_type, zx_group, stocks)
         return True
 
@@ -76,6 +80,39 @@ class ZiXuan(object):
         if del_index is not None:
             del (stocks[del_index])
             rd.zx_save(self.market_type, zx_group, stocks)
+        return True
+
+    def color_stock(self, zx_group, code, color):
+        """
+        给指定的代码加上颜色
+        """
+        stocks = self.zx_stocks(zx_group)
+        for s in stocks:
+            if s['code'] == code:
+                s['color'] = color
+        rd.zx_save(self.market_type, zx_group, stocks)
+        return True
+
+    def sort_top_stock(self, zx_group, code):
+        """
+        将股票排在最上面
+        """
+        stocks = self.zx_stocks(zx_group)
+        for s in stocks:
+            if s['code'] == code:
+                self.add_stock(zx_group, s['code'], s['name'], 'top', s['color'])
+                break
+        return True
+
+    def sort_bottom_stock(self, zx_group, code):
+        """
+        将股票排在最下面
+        """
+        stocks = self.zx_stocks(zx_group)
+        for s in stocks:
+            if s['code'] == code:
+                self.add_stock(zx_group, s['code'], s['name'], 'bottom', s['color'])
+                break
         return True
 
     def clear_zx_stocks(self, zx_group):
@@ -100,3 +137,8 @@ class ZiXuan(object):
                 res.append({'zx_name': zx_name, 'code': code, 'exists': 0})
 
         return res
+
+
+if __name__ == '__main__':
+    zx = ZiXuan('a')
+    zx.add_stock('强势', 'SH.880540', '创投概念')

@@ -34,7 +34,7 @@
          conda activate chanlun
          python check_env.py
 
-### 7. （旧版）在 `web/chanlun_web` 目录，双击  `run.bat` 启动，浏览器访问 http://127.0.0.1:8000/ 即可显示缠论解缠主页
+### 7. （旧版）~~在 `web/chanlun_web` 目录，双击  `run.bat` 启动，浏览器访问 http://127.0.0.1:8000/ 即可显示缠论解缠主页~~
 
 ### 8. （新版）在 `web/chanlun_chart` 目录，双击  `run.bat` 启动
 

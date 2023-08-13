@@ -606,8 +606,19 @@ def create_app(test_config=None):
         zx = ZiXuan(market)
         if opt == 'DEL':
             res = zx.del_stock(group_name, code)
-        else:
+        elif opt == 'ADD':
             res = zx.add_stock(group_name, code, None)
+        elif opt == 'COLOR':
+            color = request.form['color']
+            res = zx.color_stock(group_name, code, color)
+        elif opt == 'SORT':
+            direction = request.form['direction']
+            if direction == 'top':
+                res = zx.sort_top_stock(group_name, code)
+            else:
+                res = zx.sort_bottom_stock(group_name, code)
+        else:
+            res = False
 
         return {'ok': res}
 

@@ -47,6 +47,7 @@ class BackTestTrader(object):
             'strategy_close': 0,
             'strategy_open': 0,
             'execute': 0,
+            'position_record': 0,
         }
 
         # 策略对象
@@ -210,10 +211,10 @@ class BackTestTrader(object):
         :param code:
         :return: 返回持仓的总金额（包括持仓盈亏）
         """
+        s_time = time.time()
+
         hold_balance = 0
         now_profit = 0
-        price_info = self.get_price(code)
-
         if code not in self.hold_profit_history.keys():
             self.hold_profit_history[code] = {}
 
@@ -221,6 +222,7 @@ class BackTestTrader(object):
             for pos in self.positions[code].values():
                 if pos.balance == 0:
                     continue
+                price_info = self.get_price(code)
                 if pos.type == '做多':
                     high_profit_rate = round(
                         ((price_info['high'] - pos.price) / pos.price * (pos.balance * pos.now_pos_rate)
@@ -264,7 +266,9 @@ class BackTestTrader(object):
                         hold_balance += lock_pos.balance
 
                 hold_balance += (pos.balance * pos.now_pos_rate)
-        self.hold_profit_history[code][price_info['date'].strftime('%Y-%m-%d %H:%M:%S')] = now_profit
+        self.hold_profit_history[code][self.get_now_datetime().strftime('%Y-%m-%d %H:%M:%S')] = now_profit
+
+        self._use_times['position_record'] += time.time() - s_time
         return now_profit, hold_balance
 
     def position_codes(self):

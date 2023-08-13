@@ -258,6 +258,165 @@
                     'uid': 1, 'name': 'default', 'description': 'default'
                 },
 
+                // https://www.tradingview.com/charting-library-docs/latest/custom_studies/metainfo/
+                custom_indicators_getter: function (PineJS) {
+                    return Promise.resolve([
+                        {
+                            name: 'MACD BL',
+                            metainfo: {
+                                _metainfoVersion: 51,
+
+                                id: 'macd_bl@tv-basicstudies-1',
+                                name: 'MACD BL',
+                                description: 'MACD BL',
+                                shortDescription: 'MACD',
+
+                                isCustomIndicator: true,
+                                format: {
+                                    type: 'price',
+                                    precision: 2,
+                                },
+                                is_hidden_study: false,
+                                is_price_study: false, // whether the study should appear on the main series pane.
+                                linkedToSeries: true, // whether the study price scale should be the same as the main series one.
+
+                                plots: [
+                                    {
+                                        id: 'macd',
+                                        type: 'line',
+                                    },
+                                    {
+                                        id: 'signal',
+                                        type: 'line',
+                                    },
+                                    {
+                                        id: 'hist',
+                                        type: 'line',
+
+                                    },
+                                ],
+                                ohlcPlots: [],
+                                defaults: {
+                                    styles: {
+                                        macd: {
+                                            color: 'green',
+                                        },
+                                        signal: {
+                                            color: 'blue',
+                                        },
+                                        hist: {
+                                            color: 'red',
+                                            plottype: 5,
+                                        },
+                                    },
+                                    inputs: {
+                                        show_old_version: false,
+                                        fast_length: 12,
+                                        slow_length: 26,
+                                        src: 'close',
+                                        signal_length: 9,
+                                        sma_source: false,
+                                        sma_signal: false,
+                                    },
+                                    precision: 4,
+                                },
+
+                                palettes: {},
+                                styles: {
+                                    macd: {
+                                        title: 'macd',
+                                        text: 'macd',
+                                    },
+                                    signal: {
+                                        title: 'Signal',
+                                        text: 'Signal',
+                                    },
+                                    hist: {
+                                        title: 'Hist',
+                                        text: 'Hist',
+                                        histogramBase: 0,
+                                    },
+                                },
+                                inputs: [
+                                    {
+                                        id: 'show_old_version',
+                                        name: 'Show old version content',
+                                        type: 'bool',
+                                        defval: false
+                                    },
+                                    {id: 'fast_length', name: 'Fast Length', type: 'integer', defval: 12},
+                                    {id: 'slow_length', name: 'Slow Length', type: 'integer', defval: 26},
+                                    {id: 'src', name: 'Source', type: 'source', defval: 'close'},
+                                    {
+                                        id: 'signal_length',
+                                        name: 'Signal Smoothing',
+                                        type: 'integer',
+                                        min: 1,
+                                        max: 50,
+                                        defval: 9,
+                                    },
+                                    {id: 'sma_source', name: 'Simple MA(Oscillator)', type: 'bool', defval: false},
+                                    {id: 'sma_signal', name: 'Simple MA(Signal Line)', type: 'bool', defval: false},
+                                ],
+
+                            },
+                            constructor: function () {
+                                this.main = function (ctx, inputCallback) {
+                                    this._context = ctx;
+                                    this._input = inputCallback;
+
+                                    function highest_(values, length) {
+                                        return Math.max(values.splice(-length));
+                                    }
+
+                                    function lowest_(values, length) {
+                                        return Math.min(values.splice(-length));
+                                    }
+
+
+                                    var show_old_version = this._input(0);
+                                    var fast_length = this._input(1);
+                                    var slow_length = this._input(2);
+                                    var src = this._input(3);
+                                    var signal_length = this._input(4);
+                                    var sma_source = this._input(5);
+                                    var sma_signal = this._input(6);
+                                    console.log('params', show_old_version, fast_length, slow_length, src, signal_length, sma_source, sma_signal);
+
+                                    // 计算的源
+                                    var source = undefined;
+                                    if (src === 'close') {
+                                        source = this._context.new_unlimited_var(PineJS.Std.close(this._context));
+                                    } else if (src === 'open') {
+                                        source = this._context.new_unlimited_var(PineJS.Std.open(this._context));
+                                    } else if (src === 'high') {
+                                        source = this._context.new_unlimited_var(PineJS.Std.high(this._context));
+                                    } else if (src === 'low') {
+                                        source = this._context.new_unlimited_var(PineJS.Std.low(this._context));
+                                    } else if (src === 'hl2') {
+                                        source = this._context.new_unlimited_var(PineJS.Std.hl2(this._context));
+                                    } else if (src === 'hlc3') {
+                                        source = this._context.new_unlimited_var(PineJS.Std.hlc3(this._context));
+                                    } else if (src === 'ohlc4') {
+                                        source = this._context.new_unlimited_var(PineJS.Std.ohlc4(this._context));
+                                    }
+                                    var fast_ma = sma_source ? PineJS.Std.sma(source, fast_length, this._context) : PineJS.Std.ema(source, fast_length, this._context);
+                                    var slow_ma = sma_source ? PineJS.Std.sma(source, slow_length, this._context) : PineJS.Std.ema(source, slow_length, this._context);
+                                    var macd = this._context.new_unlimited_var(fast_ma - slow_ma);
+                                    var signal = sma_signal ? PineJS.Std.sma(macd, signal_length, this._context) : PineJS.Std.ema(macd, signal_length, this._context);
+                                    var hist = (macd.get(1) - signal) * 2;
+
+                                    var Dead_Cross = PineJS.Std.cross(signal, macd.get(1), this._context)
+
+                                    {#PineJS.Std.bar#}
+
+                                    return [macd.get(1), signal, {value: hist, color: 'blue'}];
+                                };
+                            },
+                        },
+                    ]);
+                },
+
                 charts_storage_url: '/tv',
                 charts_storage_api_version: "1.1",
                 client_id: 'chanlun_pro_' + id,
@@ -644,8 +803,22 @@
                     className: 'layui-font-12',
                     size: 'sm',
                     cols: [[
-                        {field: 'code', title: '代码', sort: false},
-                        {field: 'name', title: '名称', sort: false},
+                        {
+                            field: 'code', title: '代码', sort: false, templet: function (d) {
+                                if (d.color !== undefined && d.color !== '') {
+                                    return '<span style="color: ' + d.color + '">' + d.code + '</span>'
+                                }
+                                return d.code
+                            }
+                        },
+                        {
+                            field: 'name', title: '名称', sort: false, templet: function (d) {
+                                if (d.color !== undefined && d.color !== '') {
+                                    return '<span style="color: ' + d.color + '">' + d.name + '</span>'
+                                }
+                                return d.name
+                            }
+                        },
                         {
                             field: 'zf', title: '涨跌幅', sort: false, templet: function (d) {
                                 return '<span class="code_rate" data-code="' + d.code + '">--</span>'
@@ -678,13 +851,52 @@
                         show: true,
                         data: [
                             {title: '删除', id: 'del'},
+                            {title: '置顶', id: 'sort_1', direction: 'top'},
+                            {title: '置底', id: 'sort_2', direction: 'bottom'},
+                            {
+                                title: '色彩', id: 'color_1', color: '#ff5722', templet: function () {
+                                    return '<div class="layui-bg-red">红色</div>'
+                                }
+                            },
+                            {
+                                title: '色彩', id: 'color_2', color: '#ffb800', templet: function () {
+                                    return '<div class="layui-bg-orange">橙色</div>'
+                                }
+                            },
+                            {
+                                title: '色彩', id: 'color_3', color: '#16baaa', templet: function () {
+                                    return '<div class="layui-bg-green">绿色</div>'
+                                }
+                            },
+                            {
+                                title: '色彩', id: 'color_4', color: '#1e9fff', templet: function () {
+                                    return '<div class="layui-bg-blue">蓝色</div>'
+                                }
+                            },
+                            {
+                                title: '色彩', id: 'color_5', color: '#a233c6', templet: function () {
+                                    return '<div class="layui-bg-purple">紫色</div>'
+                                }
+                            },
+                            {
+                                title: '色彩', id: 'color_6', color: '', templet: function () {
+                                    return '<div class="layui-bg-gray">清除颜色</div>'
+                                }
+                            },
                         ],
                         click: function (menuData, othis) {
                             if (menuData['id'] === 'del') {
                                 $.ajax({
                                     type: "POST",
                                     url: "/set_stock_zixuan",
-                                    data: {'opt': 'DEL', 'market': market, 'group_name': zx_group, 'code': data.code},
+                                    data: {
+                                        'opt': 'DEL',
+                                        'market': market,
+                                        'group_name': zx_group,
+                                        'code': data.code,
+                                        'color': '',
+                                        'direction': '',
+                                    },
                                     dataType: 'json',
                                     success: function (res) {
                                         if (res['ok']) {
@@ -692,6 +904,42 @@
                                         } else {
                                             layer.msg('删除失败');
                                         }
+                                        // 再重新请求一遍自选列表，刷新
+                                        render_zixuan_stocks();
+                                    }
+                                });
+                            } else if (menuData['title'] === '色彩') {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/set_stock_zixuan",
+                                    data: {
+                                        'opt': 'COLOR',
+                                        'market': market,
+                                        'group_name': zx_group,
+                                        'code': data.code,
+                                        'color': menuData['color'],
+                                        'direction': '',
+                                    },
+                                    dataType: 'json',
+                                    success: function (res) {
+                                        // 再重新请求一遍自选列表，刷新
+                                        render_zixuan_stocks();
+                                    }
+                                });
+                            } else if (menuData['id'] === 'sort_1' || menuData['id'] === 'sort_2') {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "/set_stock_zixuan",
+                                    data: {
+                                        'opt': 'SORT',
+                                        'market': market,
+                                        'group_name': zx_group,
+                                        'code': data.code,
+                                        'color': '',
+                                        'direction': menuData['direction'],
+                                    },
+                                    dataType: 'json',
+                                    success: function (res) {
                                         // 再重新请求一遍自选列表，刷新
                                         render_zixuan_stocks();
                                     }
@@ -741,7 +989,7 @@
                     layer.open({
                         type: 2,
                         title: '修改警报提醒',
-                        area: ['1000px', '700px'],
+                        area: ['1000px', '90vh'],
                         content: '/alert_edit/' + market + '/' + data.id,
                         anim: 1,
                         fixed: true, // 不固定
@@ -851,7 +1099,7 @@
                         layer.open({
                             type: 2,
                             title: '缠论配置项变更',
-                            area: ['800px', '900px'],
+                            area: ['800px', '90vh'],
                             content: '/get_cl_config/' + market + '/' + code,
                             anim: 1,
                             fixed: true, // 不固定
@@ -861,7 +1109,7 @@
                         layer.open({
                             type: 2,
                             title: '新增警报提醒',
-                            area: ['1000px', '700px'],
+                            area: ['1000px', '90vh'],
                             content: '/alert_edit/' + market + '/0',
                             anim: 1,
                             fixed: true, // 不固定
@@ -871,7 +1119,7 @@
                         layer.open({
                             type: 2,
                             title: '当前任务',
-                            area: ['800px', '600px'],
+                            area: ['800px', '60vh'],
                             content: '/jobs',
                             anim: 1,
                             fixed: true, // 不固定
@@ -912,7 +1160,14 @@
                     $.ajax({
                         type: "POST",
                         url: "/set_stock_zixuan",
-                        data: {'opt': opt, 'market': market, 'group_name': data['title'], 'code': data['code']},
+                        data: {
+                            'opt': opt,
+                            'market': market,
+                            'group_name': data['title'],
+                            'code': data['code'],
+                            'color': '',
+                            'direction': '',
+                        },
                         dataType: 'json',
                         success: function (res) {
                             render_zixuan_opts();

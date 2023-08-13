@@ -12,14 +12,11 @@
 
 [在线文档](https://chanlun-pro.readthedocs.io/)
 
-[在线 Demo 展示](http://www.chanlun-trader.com/)  
-_在线Demo只做上证指数的缠论示例（速度较慢，想要有好的体验，请申请试用，本地部署）_
-
 [缠论解盘 - Windows版本](https://chanlun-pro.readthedocs.io/WINDOWS_VERSION/)
 
 **项目的核心 `cl.py` 缠论计算，需要授权许可文件才可运行，加微信好友可免费获取20天使用授权。**
 
-[更新日志](https://chanlun-pro.readthedocs.io/zh_CN/latest/UPDATE/)
+[更新日志](https://chanlun-pro.readthedocs.io/UPDATE/)
 
 _(无特殊情况，每周五例行更新)_
 
@@ -74,29 +71,10 @@ QQ 群
 
 ### 实际运行效果展示
 
-**沪深股票行情图表页面**
-
 ![股票行情页面](cookbook/docs/img/stock.png)
 
-**期货市场行情图表页面**
-
-![期货行情页面](cookbook/docs/img/futures.png)
-
-**数字货币行情图表页面**
-
-![数字货币页面](cookbook/docs/img/currency.png)
-
-**Trading View 行情图表**
-
-![Trading View 行情图表](cookbook/docs/img/tv_chart.png)
-
-**历史行情回放，根据数据库中历史行情数据，逐bar回放展示行情，可用于观察缠论计算与练习买卖操作**
-
-![回放页面](cookbook/docs/img/back.png)
-
-**可按照市场中的自选列表，设置缠论数据指标的监控信号（背驰、买卖点信息）**
-
-![监控任务管理](cookbook/docs/img/check.png)
+* 支持切换深色与浅色主题
+* 支持切换单图或双图模式
 
 **通过掘金量化进行回测**
 

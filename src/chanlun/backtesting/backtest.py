@@ -585,12 +585,23 @@ class BackTest:
                           '平均亏损', '盈亏比']
 
         mmds = {
-            '1buy': '一类买点', '2buy': '二类买点', 'l2buy': '类二类买点', '3buy': '三类买点', 'l3buy': '类三类买点',
-            'down_bi_bc_buy': '下跌笔背驰', 'down_xd_bc_buy': '下跌线段背驰', 'down_pz_bc_buy': '下跌盘整背驰',
+            '1buy': '一类买点',
+            '2buy': '二类买点',
+            'l2buy': '类二类买点',
+            '3buy': '三类买点',
+            'l3buy': '类三类买点',
+            'down_bi_bc_buy': '下跌笔背驰',
+            'down_xd_bc_buy': '下跌线段背驰',
+            'down_pz_bc_buy': '下跌盘整背驰',
             'down_qs_bc_buy': '下跌趋势背驰',
-            '1sell': '一类卖点', '2sell': '二类卖点', 'l2sell': '类二类卖点', '3sell': '三类卖点',
+            '1sell': '一类卖点',
+            '2sell': '二类卖点',
+            'l2sell': '类二类卖点',
+            '3sell': '三类卖点',
             'l3sell': '类三类卖点',
-            'up_bi_bc_sell': '上涨笔背驰', 'up_xd_bc_sell': '上涨线段背驰', 'up_pz_bc_sell': '上涨盘整背驰',
+            'up_bi_bc_sell': '上涨笔背驰',
+            'up_xd_bc_sell': '上涨线段背驰',
+            'up_pz_bc_sell': '上涨盘整背驰',
             'up_qs_bc_sell': '上涨趋势背驰',
         }
         total_trade_num = 0  # 总的交易数量

@@ -150,7 +150,7 @@ class ExchangeTDX(Exchange):
         }
         market, tdx_code, _type = self.to_tdx_code(code)
         if market is None or _type is None or start_date is not None or end_date is not None:
-            print('通达信不支持的调用参数')
+            print(f'{code} - {frequency} 通达信不支持的调用参数')
             return None
 
         # _time_s = time.time()

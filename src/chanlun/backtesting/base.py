@@ -55,7 +55,7 @@ class Operation:
         self.opt: str = opt  # 操作指示  buy  买入  sell  卖出  lock 锁仓 unlock 解除锁仓 （只有期货支持锁仓操作）
         # 触发指示的
         # 买卖点 例如：1buy 2buy l2buy 3buy l3buy  1sell 2sell l2sell 3sell l3sell down_pz_bc_buy
-        # 背驰点 例如：down_pz_bc_buy down_qs_bc_buy up_pz_bc_sell up_qs_bc_sell
+        # 背驰点 例如：down_bi_bc_buy down_pz_bc_buy down_qs_bc_buy up_bi_bc_sell up_pz_bc_sell up_qs_bc_sell
         self.mmd: str = mmd  # 触发买卖点
         self.loss_price: float = loss_price  # 止损价格
         self.info: Dict[str, object] = info  # 自定义保存的一些信息
@@ -412,6 +412,16 @@ class Strategy(ABC):
             if bi.is_done():
                 return bi
         return None
+
+    @staticmethod
+    def last_bi(cd: ICL, type: str = 'up'):
+        """
+        获取最后一个给定类型的笔
+        """
+        if cd.get_bis()[-1].type == type:
+            return cd.get_bis()[-1]
+        else:
+            return cd.get_bis()[-2]
 
     @staticmethod
     def last_done_xd(xds: List[XD]):

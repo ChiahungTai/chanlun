@@ -479,24 +479,28 @@ if __name__ == '__main__':
     # 设置显示全部列，不省略
     pd.set_option('display.max_columns', None)
 
-    code = 'AAPL'
+    code = 'SHSE.000001'
 
-    ex = ExchangeDB('us')
-    klines_d = ex.klines(code, 'd', end_date='2023-03-20 00:00:00')
-    klines_60m = ex.klines(code, '60m', end_date='2023-03-20 00:00:00')
-    klines_30m = ex.klines(code, '30m', end_date='2023-03-20 00:00:00')
+    ex = ExchangeDB('a')
+    klines_d = ex.klines(code, 'd', end_date='2023-03-21 00:00:00')
+    # klines_60m = ex.klines(code, '60m', end_date='2023-03-20 00:00:00')
+    # klines_30m = ex.klines(code, '30m', end_date='2023-03-20 00:00:00')
 
-    convert_klines_d = convert_us_kline_frequency(klines_30m, 'd')
-    print('klines_d')
+    convert_w = convert_stock_kline_frequency(klines_d, 'w')
     print(klines_d.tail())
-    print('convert_klines_d')
-    print(convert_klines_d.tail())
+    print(convert_w.tail())
 
-    convert_klines_60m = convert_us_kline_frequency(klines_30m, '60m')
-    print('klines_60m')
-    print(klines_60m.tail())
-    print('convert_klines_60m')
-    print(convert_klines_60m.tail())
+    # convert_klines_d = convert_us_kline_frequency(klines_30m, 'd')
+    # print('klines_d')
+    # print(klines_d.tail())
+    # print('convert_klines_d')
+    # print(convert_klines_d.tail())
 
-    print('klines_30m')
-    print(klines_30m.tail(30))
+    # convert_klines_60m = convert_us_kline_frequency(klines_30m, '60m')
+    # print('klines_60m')
+    # print(klines_60m.tail())
+    # print('convert_klines_60m')
+    # print(convert_klines_60m.tail())
+
+    # print('klines_30m')
+    # print(klines_30m.tail(30))

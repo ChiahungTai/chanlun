@@ -138,7 +138,10 @@ class FileCacheDB(object):
             except Exception as e:
                 if file_pathname.is_file():
                     print(f'获取 web 缓存的缠论数据对象异常 {market} {code} {frequency} - {e}，尝试删除缓存文件重新计算')
-                    file_pathname.unlink()
+                    try:
+                        file_pathname.unlink()
+                    except Exception:
+                        pass
 
             cd.process_klines(klines)
 
